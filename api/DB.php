@@ -50,7 +50,7 @@ class DB {
                 ->fpdo
                 ->from('employees')
                 ->select(null)
-                ->select("emp_no, first_name, last_name, DATE_FORMAT(birth_date,'%a %b %c %Y') AS birth_date")
+                ->select("emp_no, first_name, last_name, DATE_FORMAT(birth_date,'%a %b %d %Y') AS birth_date")
                 ->where("emp_no LIKE '%" . $requestData['search']['value'] .
                      "%' OR first_name LIKE '%" . $requestData['search']['value'] .
                      "%' OR last_name LIKE '%" . $requestData['search']['value'] . 
@@ -67,7 +67,7 @@ class DB {
             ->fpdo
             ->from('employees')
             ->select(null)
-            ->select("emp_no, first_name, last_name, DATE_FORMAT(birth_date,'%a %b %c %Y') AS birth_date")
+            ->select("emp_no, first_name, last_name, DATE_FORMAT(birth_date,'%a %b %d %Y') AS birth_date")
             ->orderBy(columns[$requestData['order'][0]['column']]."   ".$requestData['order'][0]['dir'])
             ->limit($requestData['length'])
             ->offset($requestData['start']);          
