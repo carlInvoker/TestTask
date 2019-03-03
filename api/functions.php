@@ -7,14 +7,7 @@ function echoResponse ($code, $response = array()) {
     header('Content-Type: text/html;charset=UTF-8');
     header("HTTP/1.0 $code $http_status_codes[$code]");
 
-    $json_data = array(
-	"draw"            => 0,   
-	"recordsTotal"    => intval($response['totalData']),  
-	"recordsFiltered" => intval($response['totalFiltered']), 
-	"data"            => $response['records']  
-	);
-    
-    echo json_encode($json_data);
+    echo json_encode($response);
 
     die();
 }
@@ -22,9 +15,45 @@ function echoResponse ($code, $response = array()) {
 function getSelectData ($request, $slim_response, $args) {
 
     $db = new DB();
-
-    $data = $db->getSelectData();
-                       
-    echoResponse(200, $data);
+    $requestPOST = $request->getParsedBody();
+    $data['totalData'] = $db->getDataCount();
+    $data['totalFiltered'] =  $data['totalData'];
     
+    if ( !empty($requestPOST['search']['value']) ) {
+        $query =  $db->getSearchResult($requestPOST);
+        $data['totalFiltered'] = $query['totalFiltered'];
+        $data['query'] = $query['query'];
+    }
+    else {
+        $data['query'] =  $db->getSelectData($requestPOST);
+    }
+       
+    $json_data = createResponseArray($data);
+    
+    echoResponse(200, $json_data);
+    
+}
+
+
+function createResponseArray($data) {
+
+        $recordsData['records'] = array();
+   
+        foreach ($data['query']->fetchAll() as $row) { 
+            $nestedData=array(); 
+            $nestedData[] = $row["emp_no"];	
+            $nestedData[] = $row["first_name"];
+            $nestedData[] = $row["last_name"];   
+            $nestedData[] = $row["birth_date"];
+            $recordsData['records'][] = $nestedData;
+        }
+        
+        $json_data = array(
+            "draw"            => 0,   
+            "recordsTotal"    => intval($data['totalData']),  
+            "recordsFiltered" => intval($data['totalFiltered']), 
+            "data"            => $recordsData['records']  
+	);
+        
+        return $json_data;
 }

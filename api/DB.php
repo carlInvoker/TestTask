@@ -32,37 +32,20 @@ class DB {
      * Select all employees
      * @return array $result - array of employees
      */
-    public function getSelectData () {
-
-        $requestData= $_REQUEST;
-        
-        $data['totalData'] = $this
+    
+    
+    public function getDataCount() {
+        $totalData = $this
             ->fpdo
             ->from('employees')
             ->select(null)
             ->select('COUNT(*)')
             ->fetch('COUNT(*)');
         
-        $data['totalFiltered'] = $data['totalData']; 
-
-        if( !empty($requestData['search']['value']) ) { 
-            $query = $this
-                ->fpdo
-                ->from('employees')
-                ->select(null)
-                ->select("emp_no, first_name, last_name, DATE_FORMAT(birth_date,'%a %b %d %Y') AS birth_date")
-                ->where("emp_no LIKE '%" . $requestData['search']['value'] .
-                     "%' OR first_name LIKE '%" . $requestData['search']['value'] .
-                     "%' OR last_name LIKE '%" . $requestData['search']['value'] . 
-                     "%' OR DATE_FORMAT(birth_date,'%a %b %c %Y') LIKE '%" .
-                     $requestData['search']['value'] . "%'   ")     
-                 ->orderBy(columns[$requestData['order'][0]['column']]."   ".$requestData['order'][0]['dir']);          
-              
-        $data['totalFiltered'] =  $query->count();
-        $query->limit($requestData['length'])
-              ->offset($requestData['start']);
-        }
-        else {
+           return $totalData;
+    }
+    
+    public function getSelectData($requestData) {
         $query = $this
             ->fpdo
             ->from('employees')
@@ -71,21 +54,31 @@ class DB {
             ->orderBy(columns[$requestData['order'][0]['column']]."   ".$requestData['order'][0]['dir'])
             ->limit($requestData['length'])
             ->offset($requestData['start']);          
-        }
-
-        $data['records'] = array();
-   
-        foreach ($query->fetchAll() as $row) { 
-            $nestedData=array(); 
-            $nestedData[] = $row["emp_no"];	
-            $nestedData[] = $row["first_name"];
-            $nestedData[] = $row["last_name"];   
-            $nestedData[] = $row["birth_date"];
-            $data['records'][] = $nestedData;
-        }
-
-        return $data;
         
+        return $query;
     }
-
+    
+    public function getSearchResult($requestData) {
+        $query = $this
+                ->fpdo
+                ->from('employees')
+                ->select(null)
+                ->select("emp_no, first_name, last_name, DATE_FORMAT(birth_date,'%a %b %d %Y') AS birth_date")
+                ->where("emp_no LIKE '%" . $requestData['search']['value'] .
+                     "%' OR first_name LIKE '%" . $requestData['search']['value'] .
+                     "%' OR last_name LIKE '%" . $requestData['search']['value'] . 
+                     "%' OR DATE_FORMAT(birth_date,'%a %b %d %Y') LIKE '%" . $requestData['search']['value'] .
+                     "%' OR DATE_FORMAT(birth_date,'%a %b %Y %d') LIKE '%" . $requestData['search']['value'] .   
+                     "%' OR DATE_FORMAT(birth_date,'%Y %a %b %d') LIKE '%" . $requestData['search']['value'] .
+                     "%'   ")     
+                 ->orderBy(columns[$requestData['order'][0]['column']]."   ".$requestData['order'][0]['dir']);          
+        
+        $data['totalFiltered'] =  $query->count();
+        $query->limit($requestData['length'])
+              ->offset($requestData['start']);
+        $data['query'] = $query;
+        return $data;
+    }
+    
 }
+    
